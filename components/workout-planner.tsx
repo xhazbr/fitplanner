@@ -34,7 +34,7 @@ interface WorkoutPlannerProps {
   onOpenExerciseDatabase: () => void
 }
 
-export function WorkoutPlanner({ onBack, onSave, workouts, onOpenExerciseDatabase }: WorkoutPlannerProps) {
+export function WorkoutPlanner({ onBack, onSave, workouts = [], onOpenExerciseDatabase }: WorkoutPlannerProps) {
   const [workoutName, setWorkoutName] = useState("")
   const [workoutType, setWorkoutType] = useState("")
   const [exercises, setExercises] = useState<ExerciseItem[]>([])

@@ -3,10 +3,27 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ExerciseDatabase } from "@/components/exercise-database"
-import { User, Weight, Ruler, Activity, Plus, Settings, BarChart3, Dumbbell, TrendingUp } from "lucide-react"
-import { WorkoutCalendar } from "@/components/workout-calendar"
-import { WorkoutStats } from "@/components/workout-stats"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import {
+  User,
+  Calendar,
+  Dumbbell,
+  TrendingUp,
+  Target,
+  Clock,
+  Award,
+  Activity,
+  Settings,
+  BarChart3,
+  Plus,
+  Play,
+  Database,
+} from "lucide-react"
+import { WorkoutCalendar } from "./workout-calendar"
+import { WorkoutPlanner } from "./workout-planner"
+import { WorkoutStats } from "./workout-stats"
+import { ExerciseDatabase } from "./exercise-database"
 
 interface UserData {
   name: string
@@ -22,238 +39,358 @@ interface DashboardProps {
   onOpenSettings: () => void
 }
 
-export function Dashboard({ userData, onReset, onOpenSettings }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<"home" | "workouts" | "exercises" | "stats">("home")
-  const [recentWorkouts, setRecentWorkouts] = useState<any[]>([])
+interface Workout {
+  id: string
+  name: string
+  type: string
+  exercises: any[]
+  date: string
+}
 
+export function Dashboard({ userData, onReset, onOpenSettings }: DashboardProps) {
+  const [currentView, setCurrentView] = useState<"dashboard" | "calendar" | "planner" | "stats" | "exercises">(
+    "dashboard",
+  )
+  const [workouts, setWorkouts] = useState<Workout[]>([])
+  const [exerciseCount, setExerciseCount] = useState(0)
+
+  // Load workouts and exercise count
   useEffect(() => {
-    // Load recent workouts from history
-    const savedHistory = localStorage.getItem("workoutHistory")
-    if (savedHistory) {
-      const history = JSON.parse(savedHistory)
-      setRecentWorkouts(history.slice(-3).reverse())
+    const savedWorkouts = localStorage.getItem("workouts")
+    if (savedWorkouts) {
+      setWorkouts(JSON.parse(savedWorkouts))
     }
-  }, [activeTab])
+
+    const savedExercises = localStorage.getItem("exerciseDatabase")
+    if (savedExercises) {
+      setExerciseCount(JSON.parse(savedExercises).length)
+    }
+  }, [currentView])
+
+  const handleSaveWorkout = (workout: Workout) => {
+    const updatedWorkouts = [...workouts, workout]
+    setWorkouts(updatedWorkouts)
+    localStorage.setItem("workouts", JSON.stringify(updatedWorkouts))
+  }
 
   const getIMCCategory = (imc: number) => {
-    if (imc < 18.5) return { category: "Abaixo do peso", color: "text-blue-500" }
-    if (imc < 25) return { category: "Peso normal", color: "text-green-500" }
-    if (imc < 30) return { category: "Sobrepeso", color: "text-yellow-500" }
-    return { category: "Obesidade", color: "text-red-500" }
+    if (imc < 18.5) return { category: "Abaixo do peso", color: "text-blue-600", bgColor: "bg-blue-100" }
+    if (imc < 25) return { category: "Peso normal", color: "text-green-600", bgColor: "bg-green-100" }
+    if (imc < 30) return { category: "Sobrepeso", color: "text-yellow-600", bgColor: "bg-yellow-100" }
+    return { category: "Obesidade", color: "text-red-600", bgColor: "bg-red-100" }
   }
 
   const imcInfo = getIMCCategory(userData.imc)
 
-  if (activeTab === "workouts") {
+  // Get current date info
+  const today = new Date()
+  const currentHour = today.getHours()
+  const greeting = currentHour < 12 ? "Bom dia" : currentHour < 18 ? "Boa tarde" : "Boa noite"
+
+  if (currentView === "calendar") {
     return (
-      <WorkoutCalendar onBack={() => setActiveTab("home")} onOpenExerciseDatabase={() => setActiveTab("exercises")} />
+      <WorkoutCalendar
+        onBack={() => setCurrentView("dashboard")}
+        onOpenExerciseDatabase={() => setCurrentView("exercises")}
+      />
     )
   }
 
-  if (activeTab === "exercises") {
-    return <ExerciseDatabase onBack={() => setActiveTab("workouts")} />
+  if (currentView === "planner") {
+    return (
+      <WorkoutPlanner
+        onBack={() => setCurrentView("dashboard")}
+        onSave={handleSaveWorkout}
+        workouts={workouts}
+        onOpenExerciseDatabase={() => setCurrentView("exercises")}
+      />
+    )
   }
 
-  if (activeTab === "stats") {
-    return <WorkoutStats onBack={() => setActiveTab("home")} />
+  if (currentView === "stats") {
+    return <WorkoutStats onBack={() => setCurrentView("dashboard")} />
+  }
+
+  if (currentView === "exercises") {
+    return <ExerciseDatabase onBack={() => setCurrentView("dashboard")} />
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black text-black dark:text-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-black text-black dark:text-white">
       {/* Header */}
       <div className="p-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">Olá, {userData.name}! 👋</h1>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">Pronto para treinar hoje?</p>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <User className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">
+                {greeting}, {userData.name}!
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {today.toLocaleDateString("pt-BR", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
           </div>
           <Button
+            onClick={onOpenSettings}
             variant="ghost"
             size="sm"
-            onClick={onOpenSettings}
-            className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
+            className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white p-2"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-5 h-5" />
           </Button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-4 space-y-6">
-        {activeTab === "home" && (
-          <>
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <User className="w-4 h-4" />
-                    <span className="text-xs opacity-90">Idade</span>
-                  </div>
-                  <p className="text-xl font-bold">{userData.age} anos</p>
-                </CardContent>
-              </Card>
+      <div className="p-4 space-y-6 pb-20">
+        {/* User Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm">
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                <User className="w-5 h-5 text-white" />
+              </div>
+              <p className="text-2xl font-bold">{userData.age}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">anos</p>
+            </CardContent>
+          </Card>
 
-              <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Weight className="w-4 h-4" />
-                    <span className="text-xs opacity-90">Peso</span>
-                  </div>
-                  <p className="text-xl font-bold">{userData.weight} kg</p>
-                </CardContent>
-              </Card>
+          <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm">
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Target className="w-5 h-5 text-white" />
+              </div>
+              <p className="text-2xl font-bold">{userData.weight}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">kg</p>
+            </CardContent>
+          </Card>
 
-              <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Ruler className="w-4 h-4" />
-                    <span className="text-xs opacity-90">Altura</span>
-                  </div>
-                  <p className="text-xl font-bold">{userData.height} cm</p>
-                </CardContent>
-              </Card>
+          <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm">
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <p className="text-2xl font-bold">{userData.height}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">cm</p>
+            </CardContent>
+          </Card>
 
-              <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-lg">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="w-4 h-4" />
-                    <span className="text-xs opacity-90">IMC</span>
-                  </div>
-                  <p className="text-xl font-bold">{userData.imc}</p>
-                  <p className="text-xs opacity-75">{imcInfo.category}</p>
-                </CardContent>
-              </Card>
+          <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm">
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <p className="text-2xl font-bold">{userData.imc.toFixed(1)}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">IMC</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* IMC Status */}
+        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Status do IMC</h3>
+              <Badge className={`${imcInfo.bgColor} ${imcInfo.color} border-0`}>{imcInfo.category}</Badge>
             </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                <span>Abaixo do peso</span>
+                <span>Normal</span>
+                <span>Sobrepeso</span>
+                <span>Obesidade</span>
+              </div>
+              <Progress value={Math.min((userData.imc / 35) * 100, 100)} className="h-2" />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>18.5</span>
+                <span>25</span>
+                <span>30</span>
+                <span>35+</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Quick Actions */}
-            <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Ações Rápidas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  onClick={() => setActiveTab("workouts")}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg flex items-center gap-2 h-12"
-                >
-                  <Plus className="w-4 h-4" />
-                  Planejar Novo Treino
-                </Button>
+        {/* Quick Actions */}
+        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <div className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-md flex items-center justify-center">
+                <Plus className="w-4 h-4 text-white" />
+              </div>
+              Ações Rápidas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button
+              onClick={() => setCurrentView("calendar")}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white flex items-center gap-2 h-12"
+            >
+              <Calendar className="w-5 h-5" />
+              <div className="text-left">
+                <div className="font-medium">Calendário de Treinos</div>
+                <div className="text-xs opacity-90">Organize sua semana</div>
+              </div>
+            </Button>
 
-                <Button
-                  onClick={() => setActiveTab("exercises")}
-                  variant="outline"
-                  className="w-full border-gray-300 dark:border-gray-700 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2 bg-transparent h-12"
-                >
-                  <Dumbbell className="w-4 h-4" />
-                  Banco de Exercícios
-                </Button>
-              </CardContent>
-            </Card>
+            <Button
+              onClick={() => setCurrentView("planner")}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white flex items-center gap-2 h-12"
+            >
+              <Dumbbell className="w-5 h-5" />
+              <div className="text-left">
+                <div className="font-medium">Criar Treino</div>
+                <div className="text-xs opacity-90">Monte seu treino personalizado</div>
+              </div>
+            </Button>
 
-            {/* Recent Workouts */}
-            {recentWorkouts.length > 0 && (
-              <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Treinos Recentes</CardTitle>
+            <Button
+              onClick={() => setCurrentView("exercises")}
+              className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white flex items-center gap-2 h-12"
+            >
+              <Database className="w-5 h-5" />
+              <div className="text-left">
+                <div className="font-medium">Banco de Exercícios</div>
+                <div className="text-xs opacity-90">{exerciseCount} exercícios disponíveis</div>
+              </div>
+            </Button>
+
+            <Button
+              onClick={() => setCurrentView("stats")}
+              className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white flex items-center gap-2 h-12"
+            >
+              <BarChart3 className="w-5 h-5" />
+              <div className="text-left">
+                <div className="font-medium">Estatísticas</div>
+                <div className="text-xs opacity-90">Acompanhe seu progresso</div>
+              </div>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Recent Workouts */}
+        {workouts.length > 0 && (
+          <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-white" />
+                </div>
+                Treinos Recentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {workouts
+                .slice(-3)
+                .reverse()
+                .map((workout) => (
+                  <div
+                    key={workout.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <div>
+                      <p className="font-medium">{workout.name}</p>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <Badge variant="outline" className="text-xs">
+                          {workout.type}
+                        </Badge>
+                        <span>{workout.exercises.length} exercícios</span>
+                        <span>•</span>
+                        <span>{workout.date}</span>
+                      </div>
+                    </div>
                     <Button
-                      onClick={() => setActiveTab("stats")}
-                      variant="ghost"
                       size="sm"
-                      className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
                     >
-                      <TrendingUp className="w-4 h-4 mr-1" />
-                      Ver Mais
+                      <Play className="w-4 h-4" />
                     </Button>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {recentWorkouts.map((workout, index) => (
-                      <div
-                        key={`${workout.workoutId}-${index}`}
-                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
-                      >
-                        <div>
-                          <p className="font-medium">{workout.workoutName}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {new Date(workout.completedAt).toLocaleDateString("pt-BR")}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {workout.exercises?.length || 0} exercícios
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {workout.exercises?.reduce(
-                              (total: number, ex: any) =>
-                                total + (ex.sets?.filter((s: any) => s.completed).length || 0),
-                              0,
-                            ) || 0}{" "}
-                            séries
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
+                ))}
+            </CardContent>
+          </Card>
         )}
+
+        {/* Motivational Quote */}
+        <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 shadow-lg">
+          <CardContent className="p-6 text-center">
+            <Award className="w-12 h-12 mx-auto mb-4 opacity-80" />
+            <p className="text-lg font-medium mb-2">
+              "O sucesso é a soma de pequenos esforços repetidos dia após dia."
+            </p>
+            <p className="text-sm opacity-80">Continue firme na sua jornada!</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 shadow-lg">
-        <div className="flex justify-around max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg">
+        <div className="flex items-center justify-around py-2">
           <Button
-            variant={activeTab === "home" ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
-            onClick={() => setActiveTab("home")}
-            className={
-              activeTab === "home"
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                : "text-gray-600 dark:text-gray-400"
-            }
+            onClick={() => setCurrentView("dashboard")}
+            className={`flex flex-col items-center gap-1 p-3 ${
+              currentView === "dashboard" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"
+            }`}
           >
-            <User className="w-4 h-4" />
+            <User className="w-5 h-5" />
+            <span className="text-xs">Início</span>
           </Button>
+
           <Button
-            variant={activeTab === "workouts" ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
-            onClick={() => setActiveTab("workouts")}
-            className={
-              activeTab === "workouts"
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                : "text-gray-600 dark:text-gray-400"
-            }
+            onClick={() => setCurrentView("calendar")}
+            className={`flex flex-col items-center gap-1 p-3 ${
+              currentView === "calendar" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"
+            }`}
           >
-            <Activity className="w-4 h-4" />
+            <Calendar className="w-5 h-5" />
+            <span className="text-xs">Calendário</span>
           </Button>
+
           <Button
-            variant={activeTab === "exercises" ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
-            onClick={() => setActiveTab("exercises")}
-            className={
-              activeTab === "exercises"
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                : "text-gray-600 dark:text-gray-400"
-            }
+            onClick={() => setCurrentView("planner")}
+            className={`flex flex-col items-center gap-1 p-3 ${
+              currentView === "planner" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"
+            }`}
           >
-            <Dumbbell className="w-4 h-4" />
+            <Dumbbell className="w-5 h-5" />
+            <span className="text-xs">Treinos</span>
           </Button>
+
           <Button
-            variant={activeTab === "stats" ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
-            onClick={() => setActiveTab("stats")}
-            className={
-              activeTab === "stats"
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                : "text-gray-600 dark:text-gray-400"
-            }
+            onClick={() => setCurrentView("exercises")}
+            className={`flex flex-col items-center gap-1 p-3 ${
+              currentView === "exercises" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"
+            }`}
           >
-            <BarChart3 className="w-4 h-4" />
+            <Database className="w-5 h-5" />
+            <span className="text-xs">Exercícios</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCurrentView("stats")}
+            className={`flex flex-col items-center gap-1 p-3 ${
+              currentView === "stats" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"
+            }`}
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span className="text-xs">Stats</span>
           </Button>
         </div>
       </div>

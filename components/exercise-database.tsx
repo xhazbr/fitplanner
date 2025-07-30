@@ -253,16 +253,16 @@ export function ExerciseDatabase({ onBack }: ExerciseDatabaseProps) {
           </div>
         </div>
 
-        {/* Add Exercise Button */}
+        {/* Admin Panel Button */}
         <Button
           onClick={() => {
             resetForm()
             setShowAddForm(true)
           }}
-          className="w-full bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 flex items-center gap-2"
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg flex items-center gap-2 h-12"
         >
           <Plus className="w-4 h-4" />
-          Adicionar Novo Exercício
+          Painel Administrativo - Adicionar Exercício
         </Button>
 
         {/* Exercise List */}
@@ -374,131 +374,172 @@ export function ExerciseDatabase({ onBack }: ExerciseDatabaseProps) {
           )}
         </div>
 
-        {/* Add/Edit Exercise Form */}
+        {/* Admin Panel Form */}
         {showAddForm && (
           <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-            <DialogContent className="bg-white dark:bg-gray-900 text-black dark:text-white max-w-lg">
+            <DialogContent className="bg-white dark:bg-gray-900 text-black dark:text-white max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{isEditing ? "Editar Exercício" : "Adicionar Novo Exercício"}</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-center">
+                  {isEditing ? "✏️ Editar Exercício" : "➕ Painel Administrativo"}
+                </DialogTitle>
+                <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                  {isEditing ? "Modifique as informações do exercício" : "Adicione um novo exercício ao banco de dados"}
+                </p>
               </DialogHeader>
 
-              <div className="space-y-4 mt-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 block">
-                    Nome do Exercício*
-                  </label>
-                  <Input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Ex: Supino Reto"
-                    className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-                    required
-                  />
-                </div>
+              <div className="space-y-6 mt-6">
+                {/* Basic Information Section */}
+                <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <h3 className="font-semibold text-lg flex items-center gap-2">📝 Informações Básicas</h3>
 
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 block">Categoria*</label>
-                  <Select value={formData.category} onValueChange={(value) => handleSelectChange("category", value)}>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                      <SelectValue placeholder="Selecione a categoria" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category} className="text-black dark:text-white">
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 block">
-                    Link do Vídeo (YouTube)
-                  </label>
-                  <Input
-                    name="videoUrl"
-                    value={formData.videoUrl}
-                    onChange={handleInputChange}
-                    placeholder="Ex: https://www.youtube.com/watch?v=..."
-                    className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Cole o link do YouTube (suporta formatos youtube.com/watch e youtu.be)
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 block">
-                    Instruções de Execução
-                  </label>
-                  <Textarea
-                    name="instructions"
-                    value={formData.instructions}
-                    onChange={handleInputChange}
-                    placeholder="Descreva passo a passo como realizar o exercício..."
-                    className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 min-h-[120px]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 block">
-                      Equipamento
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      Nome do Exercício *
+                    </label>
+                    <Input
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Ex: Supino Reto, Agachamento Livre..."
+                      className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                        Categoria *
+                      </label>
+                      <Select
+                        value={formData.category}
+                        onValueChange={(value) => handleSelectChange("category", value)}
+                      >
+                        <SelectTrigger className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                          <SelectValue placeholder="Selecione a categoria" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                          {categories.map((category) => (
+                            <SelectItem key={category} value={category} className="text-black dark:text-white">
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                        Nível de Dificuldade
+                      </label>
+                      <Select
+                        value={formData.difficulty}
+                        onValueChange={(value) =>
+                          handleSelectChange("difficulty", value as "iniciante" | "intermediário" | "avançado")
+                        }
+                      >
+                        <SelectTrigger className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                          <SelectItem value="iniciante" className="text-black dark:text-white">
+                            🟢 Iniciante
+                          </SelectItem>
+                          <SelectItem value="intermediário" className="text-black dark:text-white">
+                            🟡 Intermediário
+                          </SelectItem>
+                          <SelectItem value="avançado" className="text-black dark:text-white">
+                            🔴 Avançado
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      Equipamento Necessário
                     </label>
                     <Input
                       name="equipment"
                       value={formData.equipment}
                       onChange={handleInputChange}
-                      placeholder="Ex: Barra, Halteres"
-                      className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+                      placeholder="Ex: Barra, Halteres, Peso corporal, Máquina..."
+                      className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                     />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 block">
-                      Nível de Dificuldade
-                    </label>
-                    <Select
-                      value={formData.difficulty}
-                      onValueChange={(value) =>
-                        handleSelectChange("difficulty", value as "iniciante" | "intermediário" | "avançado")
-                      }
-                    >
-                      <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                        <SelectItem value="iniciante" className="text-black dark:text-white">
-                          Iniciante
-                        </SelectItem>
-                        <SelectItem value="intermediário" className="text-black dark:text-white">
-                          Intermediário
-                        </SelectItem>
-                        <SelectItem value="avançado" className="text-black dark:text-white">
-                          Avançado
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-4">
+                {/* Video Section */}
+                <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <h3 className="font-semibold text-lg flex items-center gap-2">🎥 Vídeo Demonstrativo</h3>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      Link do YouTube
+                    </label>
+                    <Input
+                      name="videoUrl"
+                      value={formData.videoUrl}
+                      onChange={handleInputChange}
+                      placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
+                      className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                    />
+                    <div className="mt-2 p-3 bg-blue-100 dark:bg-blue-800/30 rounded-md">
+                      <p className="text-xs text-blue-800 dark:text-blue-200 font-medium">💡 Dica:</p>
+                      <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                        Cole qualquer link do YouTube. O sistema converte automaticamente para o formato correto.
+                        Formatos aceitos: youtube.com/watch?v= e youtu.be/
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instructions Section */}
+                <div className="space-y-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <h3 className="font-semibold text-lg flex items-center gap-2">📋 Instruções de Execução</h3>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      Passo a passo detalhado
+                    </label>
+                    <Textarea
+                      name="instructions"
+                      value={formData.instructions}
+                      onChange={handleInputChange}
+                      placeholder="1. Posicione-se corretamente...&#10;2. Mantenha a postura...&#10;3. Execute o movimento...&#10;4. Retorne à posição inicial..."
+                      className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 min-h-[150px]"
+                    />
+                    <div className="mt-2 p-3 bg-green-100 dark:bg-green-800/30 rounded-md">
+                      <p className="text-xs text-green-800 dark:text-green-200 font-medium">
+                        ✅ Dicas para boas instruções:
+                      </p>
+                      <ul className="text-xs text-green-700 dark:text-green-300 mt-1 space-y-1">
+                        <li>• Numere cada passo (1., 2., 3...)</li>
+                        <li>• Seja específico sobre posicionamento</li>
+                        <li>• Mencione pontos de atenção importantes</li>
+                        <li>• Inclua dicas de respiração se relevante</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <Button
                     variant="outline"
                     onClick={() => setShowAddForm(false)}
-                    className="flex-1 border-gray-300 dark:border-gray-700 bg-transparent"
+                    className="flex-1 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
-                    Cancelar
+                    ❌ Cancelar
                   </Button>
                   <Button
                     onClick={handleAddExercise}
                     disabled={!formData.name || !formData.category}
-                    className="flex-1 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    {isEditing ? "Atualizar" : "Salvar"}
+                    {isEditing ? "💾 Atualizar Exercício" : "✨ Criar Exercício"}
                   </Button>
                 </div>
               </div>
